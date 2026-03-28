@@ -1,0 +1,51 @@
+{
+  "experiment_name": "ai_voice_detection_baseline",
+  "random_state": 42,
+  "dataset": {
+    "source": "data/training_dataset",
+    "balance_method": "undersample",
+    "test_size": 0.2,
+    "validation_size": 0.2,
+    "augmentation": {
+      "enabled": false,
+      "add_noise": {
+        "enabled": true,
+        "noise_factor": 0.005
+      },
+      "time_stretch": {
+        "enabled": true,
+        "stretch_factors": [0.9, 1.1]
+      },
+      "pitch_shift": {
+        "enabled": true,
+        "n_steps": [-1.0, 1.0]
+      },
+      "volume_adjustment": {
+        "enabled": true,
+        "volume_factors": [0.8, 1.2]
+      }
+    }
+  },
+  "hyperparameter_tuning": {
+    "enabled": true,
+    "cv_folds": 5,
+    "scoring": "f1_weighted",
+    "param_grid": {
+      "n_estimators": [50, 100, 200],
+      "max_depth": [null, 10, 20, 30],
+      "min_samples_split": [2, 5, 10],
+      "min_samples_leaf": [1, 2, 4],
+      "max_features": ["sqrt", "log2", null]
+    }
+  },
+  "model_selection": {
+    "enabled": true,
+    "models": ["random_forest"],
+    "selection_metric": "f1_weighted"
+  },
+  "output_dir": null,
+  "logging": {
+    "level": "INFO",
+    "save_logs": true
+  }
+}

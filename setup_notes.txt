@@ -1,0 +1,23 @@
+Setup Notes
+===========
+
+Dependencies:
+- Python 3.9+
+- FFmpeg (for audio processing)
+- See requirements.txt
+
+Installation:
+pip install -r requirements.txt
+
+For FFmpeg:
+- Ubuntu: sudo apt install ffmpeg
+- macOS: brew install ffmpeg
+- Windows: download from ffmpeg.org
+
+Model files should be in models/production/
+
+Dataset structure:
+dataset/Real/Real/ - human voices
+dataset/Fake/Fake/ - synthetic voices
+
+Run demo.py to test the system.

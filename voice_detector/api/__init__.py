@@ -1,0 +1,1 @@
+"""API Gateway Layer - Handles HTTP requests and responses"""
