@@ -143,12 +143,11 @@ cython_debug/
 
 # Project specific runtime artifacts
 /logs/
-/models/
 /data/
 *.wav
 *.mp3
 *.pkl
-*.joblib
+*.joblib.bak
 
 # Hypothesis test cache
 .hypothesis/
