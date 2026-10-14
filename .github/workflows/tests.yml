@@ -38,7 +38,7 @@ jobs:
         run: |
           docker run --detach --name ai-voice-detector-smoke --publish 8000:8000 ai-voice-detector:ci
           for attempt in $(seq 1 60); do
-            if curl --fail --silent http://127.0.0.1:8000/health; then
+            if curl --fail --silent http://127.0.0.1:8000/health/detailed | python -c 'import json,sys; d=json.load(sys.stdin); assert d["checks"]["services_initialized"] and d["checks"]["model_loaded"]' 2>/dev/null; then
               docker rm --force ai-voice-detector-smoke
               exit 0
             fi
