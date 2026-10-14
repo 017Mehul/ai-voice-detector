@@ -36,7 +36,7 @@ docs/
 !README.md
 
 # Development-only files
- tests/
+tests/
 .env
 .env.*
 !.env.example
