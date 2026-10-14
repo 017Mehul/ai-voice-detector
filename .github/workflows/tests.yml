@@ -34,5 +34,18 @@ jobs:
           pip install -e .
       - name: Build production Docker image
         run: docker build --tag ai-voice-detector:ci .
+      - name: Smoke-test production container
+        run: |
+          docker run --detach --name ai-voice-detector-smoke --publish 8000:8000 ai-voice-detector:ci
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:8000/health; then
+              docker rm --force ai-voice-detector-smoke
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs ai-voice-detector-smoke
+          docker rm --force ai-voice-detector-smoke
+          exit 1
       - name: Run regression tests
         run: python -m pytest -q
