@@ -30,14 +30,9 @@ Result is stored in scan history and a PDF forensic report is generated
 💾 Persistent scan history — no database required
 ---
 📈 Model Performance
-Trained and evaluated on a balanced dataset of real and AI-generated voice recordings:
-Metric	Score
-Cross-Validation Accuracy	95.3%
-Precision	94.1%
-Recall	96.2%
-F1 Score	95.1%
-Model	Random Forest (200 estimators)
-Features	65 (MFCC + Spectral + Temporal)
+The repository contains a serialized classifier at `models/voice_classifier.joblib` and a calibration artifact at `models/calibration_params.joblib`. Performance figures should only be published alongside the exact dataset split, evaluation script, and model artifact used to produce them. The historical accuracy/precision/recall figures are omitted here because the checked-in training code describes a different model configuration (XGBoost with 78 features), so those figures cannot currently be independently reproduced from the repository as-is.
+
+Before making benchmark claims, retrain/evaluate the deployed artifact using a held-out, speaker-disjoint test set and record the dataset version, class balance, confusion matrix, precision, recall, F1, and accuracy.
 ---
 💼 Use Cases
 🔐 Detect AI-generated scam calls and voice fraud
