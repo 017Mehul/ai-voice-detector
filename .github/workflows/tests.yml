@@ -32,5 +32,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -e .
+      - name: Build production Docker image
+        run: docker build --tag ai-voice-detector:ci .
       - name: Run regression tests
         run: python -m pytest -q
