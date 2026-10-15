@@ -172,7 +172,12 @@ function loadJson(key, fallback) {
 }
 
 function persistJson(key, value) {
-    localStorage.setItem(key, JSON.stringify(value));
+    try {
+        localStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+        // Private browsing, quota limits, or disabled storage must not break scans.
+        console.warn("VoxTrust could not persist local state:", error);
+    }
 }
 
 function getAudio() {
@@ -1408,29 +1413,37 @@ async function populateStatusScreen() {
     document.getElementById("status-max-size").textContent = `${maxSize.toFixed(1)} MB`;
     document.getElementById("status-supported-formats").textContent = formats.join(" / ");
     document.getElementById("status-languages").textContent = formatLanguageSummary(languages);
-    document.getElementById("status-latency").textContent = performance
-        ? "1.2 sec/min"
-        : "Nominal";
-    document.getElementById("node-ping").textContent = isHealthy ? "92ms Ping" : "Link degraded";
+    const latencyValue = performance?.average_latency_ms ?? performance?.latency_ms;
+    document.getElementById("status-latency").textContent = Number.isFinite(Number(latencyValue))
+        ? `${Math.round(Number(latencyValue))} ms`
+        : "Not reported";
+    const pingValue = health?.latency_ms ?? status?.latency_ms;
+    document.getElementById("node-ping").textContent = Number.isFinite(Number(pingValue))
+        ? `${Math.round(Number(pingValue))} ms response`
+        : (isHealthy ? "Reachable" : "Link degraded");
 
+    const classifier = pipeline?.components?.classifier;
+    const extractor = pipeline?.components?.feature_extractor;
     const engines = [
         {
             title: "Deepfake Detection",
-            subtitle: pipeline?.components?.classifier?.type || "Runtime classifier",
-            uptime: pipeline?.components?.classifier?.trained ? "99.98%" : "--",
-            status: humanizeStatus(pipeline?.components?.classifier?.status, pipeline?.components?.classifier?.trained),
+            subtitle: classifier?.type || "Runtime classifier",
+            uptime: classifier?.uptime_percent != null ? `${Number(classifier.uptime_percent).toFixed(2)}%` : "Not reported",
+            status: humanizeStatus(classifier?.status, classifier?.trained),
         },
         {
             title: "Voice Fingerprint Analysis",
-            subtitle: pipeline?.components?.feature_extractor?.type || "Feature extractor",
-            uptime: pipeline?.components?.feature_extractor?.status === "healthy" ? "99.95%" : "--",
-            status: humanizeStatus(pipeline?.components?.feature_extractor?.status, true),
+            subtitle: extractor?.type || "Feature extractor",
+            uptime: extractor?.uptime_percent != null ? `${Number(extractor.uptime_percent).toFixed(2)}%` : "Not reported",
+            status: humanizeStatus(extractor?.status, true),
         },
         {
             title: "Language Identification",
-            subtitle: `${languages.length || 0} supported languages`,
-            uptime: languages.length > 0 ? "100.0%" : "--",
-            status: languages.length > 0 ? "Operational" : "Degraded",
+            subtitle: `${languages.length} supported languages`,
+            uptime: status?.language_identification?.uptime_percent != null
+                ? `${Number(status.language_identification.uptime_percent).toFixed(2)}%`
+                : "Not reported",
+            status: languages.length > 0 ? "Operational" : "Not reported",
         },
     ];
 
