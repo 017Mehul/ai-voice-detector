@@ -112,12 +112,12 @@ class TestSpectralFeatureProperties:
         assert np.all(spectral_features.zero_crossing_rate <= 1.0), \
             "Zero crossing rate should be <= 1.0"
         
-        # Property 9: Spectral rolloff should be >= spectral centroid (generally true)
-        # This is a loose constraint as it may not always hold, but usually does
-        mean_centroid = np.mean(spectral_features.centroid)
-        mean_rolloff = np.mean(spectral_features.rolloff)
-        assert mean_rolloff >= mean_centroid * 0.5, \
-            "Mean spectral rolloff should generally be >= half the mean centroid"
+        # Property 9: Spectral rolloff is a frequency and must stay within
+        # the representable range. It is not mathematically guaranteed to be
+        # close to the centroid for every valid spectrum, so do not assert a
+        # fixed relationship between their means.
+        assert np.all(spectral_features.rolloff <= nyquist_freq), \
+            f"Spectral rolloff should be <= Nyquist frequency ({nyquist_freq} Hz)"
     
     @given(audio_data=valid_audio_data())
     @settings(max_examples=8, deadline=2000, suppress_health_check=[HealthCheck.data_too_large])

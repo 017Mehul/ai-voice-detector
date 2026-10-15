@@ -338,7 +338,7 @@ RATE_LIMIT_WINDOW=60
             f.flush()
             
             # Mock the model path check since we don't have actual model file
-            with patch.object(Path, 'exists', return_value=True):
+            with patch.object(Path, 'exists', return_value=True), patch.object(Path, 'is_file', return_value=True):
                 is_ready, report = self.validator.validate_config_file(Path(f.name))
             
             # Should be production ready (or close to it)
