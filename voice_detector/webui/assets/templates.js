@@ -132,7 +132,7 @@ function homeScreen() {
                             <strong>Drag and drop an audio file here</strong>
                             <span>or click to browse</span>
                             <span class="reference-upload-button">↥ &nbsp; Choose Audio File</span>
-                            <small>Supported: WAV, MP3, M4A, FLAC, OGG &nbsp; • &nbsp; Max file size: 10 MB</small>
+                            <small>Supported: WAV, MP3, FLAC &nbsp; • &nbsp; Max file size: 10 MB</small>
                         </label>
                     </article>
                     <div class="reference-results-column">
