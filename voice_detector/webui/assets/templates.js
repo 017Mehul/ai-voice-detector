@@ -313,7 +313,7 @@ function processingScreen() {
                             <p>Subject: <span id="processing-subject" class="subject-name">'Unknown_Capture_021.wav'</span></p>
                         </div>
                         <div class="confidence-index">
-                            <strong id="processing-confidence">74.2%</strong>
+                            <strong id="processing-confidence">—</strong>
                             <span>Current Confidence Index</span>
                         </div>
                     </div>
@@ -328,8 +328,8 @@ function processingScreen() {
                                 <h3>Technical Metadata</h3>
                                 <dl>
                                     <div><dt>Processing Engine</dt><dd>VOX-CORE v2.4.0</dd></div>
-                                    <div><dt>Sample Rate</dt><dd id="processing-rate">48.0 kHz / 24-bit</dd></div>
-                                    <div><dt>Security Protocol</dt><dd>AES-256 Encrypted</dd></div>
+                                    <div><dt>Sample Rate</dt><dd id="processing-rate">—</dd></div>
+                                    <div><dt>Transport Security</dt><dd>HTTPS in transit</dd></div>
                                     <div><dt>Vector Alignment</dt><dd>Optimized</dd></div>
                                 </dl>
                             </article>
