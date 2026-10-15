@@ -3,6 +3,7 @@ fastapi==0.104.1
 uvicorn[standard]==0.24.0
 
 # Audio Processing
+resampy==0.4.3
 librosa==0.10.1
 soundfile==0.12.1
 pydub==0.25.1
