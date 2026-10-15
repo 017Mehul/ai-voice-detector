@@ -524,21 +524,29 @@ class ConfidenceCalibrator:
 
             saved_data = joblib.load(calibrator_path)
 
-            # Some deployments intentionally ship an unfitted ConfidenceCalibrator
-            # as a placeholder because the old calibrator was trained against a
-            # previous classifier. Treat that artifact as "calibration disabled"
-            # rather than a corrupt artifact: inference already returns the
-            # classifier's raw confidence when no usable calibrator is available.
+            # Production artifacts may store the wrapper in a dict:
+            # {"calibrator": ConfidenceCalibrator(...), "is_fitted": False, ...}.
+            # Inspect the nested object as well as a direct wrapper instance;
+            # otherwise _restore_from_artifact(None) misclassifies this known
+            # disabled artifact as corrupt and logs a startup warning.
+            artifact_wrapper = saved_data.get("calibrator") if isinstance(saved_data, dict) else saved_data
             if (
-                isinstance(saved_data, ConfidenceCalibrator)
-                and not saved_data.has_usable_calibrator()
+                isinstance(artifact_wrapper, ConfidenceCalibrator)
+                and not artifact_wrapper.has_usable_calibrator()
             ):
-                self.method = saved_data.method if saved_data.method in ("platt", "isotonic") else self.method
-                if isinstance(saved_data.feature_quality_weights, dict):
-                    self.feature_quality_weights = saved_data.feature_quality_weights.copy()
+                metadata = saved_data if isinstance(saved_data, dict) else {}
+                saved_method = metadata.get("method", getattr(artifact_wrapper, "method", None))
+                if saved_method in ("platt", "isotonic"):
+                    self.method = saved_method
+                weights = metadata.get(
+                    "feature_quality_weights",
+                    getattr(artifact_wrapper, "feature_quality_weights", None),
+                )
+                if isinstance(weights, dict):
+                    self.feature_quality_weights = weights.copy()
                 logger.info(
                     "Calibration artifact is an unfitted placeholder; "
-                    "raw model confidence will be returned"
+                    "calibration is disabled and raw model confidence will be returned"
                 )
                 return
 
