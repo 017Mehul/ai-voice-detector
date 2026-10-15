@@ -74,124 +74,85 @@ export function renderScreen(screen) {
 
 function homeScreen() {
     return `
-        <section class="ui-screen screen-home">
-            ${globalTopbar("home")}
-
-            <main class="home-main">
-                <section class="hero-panel">
-                    <div class="hero-copy">
-                        <div class="eyebrow">Forensic Authority v4.8</div>
-                        <h1>IS IT HUMAN<br>OR AI?</h1>
-                        <p>
-                            Detect synthetic speech and deepfake audio with laboratory-grade precision.
-                            VoxTrust provides the definitive verdict for legal, journalistic, and security investigations.
-                        </p>
-                        <div class="hero-actions">
-                            <button class="btn btn-solid" data-route="${APP_ROUTES.workspace}">Analyze Audio</button>
-                            <button class="btn btn-ghost" data-route="${APP_ROUTES.status}">View Demo</button>
+        <section class="ui-screen screen-home vt-reference-home">
+            <header class="reference-topbar">
+                <button class="reference-brand" data-route="${APP_ROUTES.home}" aria-label="VoxTrust home">
+                    <span class="reference-brand-mark">▥</span>
+                    <span><strong>VoxTrust</strong><small>AI Voice Detector</small></span>
+                </button>
+                <nav class="reference-topnav">
+                    ${navButton("Home", APP_ROUTES.home, true)}
+                    ${navButton("Analyze", APP_ROUTES.workspace)}
+                    ${navButton("History", APP_ROUTES.repository)}
+                    ${navButton("Diagnostics", APP_ROUTES.diagnostics)}
+                    ${navButton("System Status", APP_ROUTES.status)}
+                </nav>
+                <div class="reference-top-actions">
+                    <button class="reference-theme" type="button" aria-label="Theme preview"><span>☼</span><i></i><span>☾</span></button>
+                    <button class="reference-avatar" data-route="${APP_ROUTES.status}" aria-label="Profile">M⌄</button>
+                </div>
+            </header>
+            <aside class="reference-sidebar">
+                <nav class="reference-side-nav">
+                    <button class="active" data-route="${APP_ROUTES.home}"><span>⌂</span>Home</button>
+                    <button data-route="${APP_ROUTES.workspace}"><span>♬</span>Analyze Audio</button>
+                    <button data-route="${APP_ROUTES.repository}"><span>◷</span>Scan History</button>
+                    <button data-route="${APP_ROUTES.diagnostics}"><span>▥</span>Diagnostics</button>
+                    <button data-route="${APP_ROUTES.status}"><span>⛨</span>System Status</button>
+                    <button data-route="${APP_ROUTES.status}"><span>ⓘ</span>About</button>
+                </nav>
+                <div class="reference-side-art"><span class="side-orb"></span><span class="side-shield">♬</span><small>Detect.<br>Verify.<br>Stay Ahead.</small><em>Powered by<br>Advanced AI</em><b>→</b></div>
+            </aside>
+            <main class="reference-main">
+                <section class="reference-hero">
+                    <div class="reference-hero-copy">
+                        <span class="reference-eyebrow">TRUST IN EVERY VOICE</span>
+                        <h1>Detect AI-Generated<br>Voices with <em>Confidence</em></h1>
+                        <p>Upload an audio recording and let our AI analyze whether<br class="desktop-break"> it's a real human voice or an AI-generated voice.</p>
+                        <div class="reference-benefits">
+                            <div><span class="benefit-icon">✓</span><strong>High Accuracy<small>Advanced ML models</small></strong></div>
+                            <div><span class="benefit-icon">ϟ</span><strong>Fast Analysis<small>Results in seconds</small></strong></div>
+                            <div><span class="benefit-icon">♙</span><strong>Private &amp; Secure<small>Your data stays safe</small></strong></div>
                         </div>
                     </div>
-                    <div class="hero-visual">
-                        <div class="wave-card">
-                            <div class="wave-card-head">
-                                <span>Forensic Pattern Map</span>
-                                <span>D-4582</span>
-                            </div>
-                            <div class="hero-wave-grid">
-                                <div class="hero-bars hero-bars-gold"></div>
-                                <div class="hero-bars hero-bars-cyan"></div>
-                            </div>
-                        </div>
-                        <div class="confidence-card">
-                            <span>Neural Confidence</span>
-                            <strong>99.8%</strong>
-                            <small>Verified Authentic</small>
-                        </div>
+                    <div class="reference-hero-art" aria-hidden="true">
+                        <div class="reference-orbit orbit-one"></div><div class="reference-orbit orbit-two"></div>
+                        <div class="reference-float-card human-card"><b>Human Voice</b><span class="mini-wave blue-wave"></span></div>
+                        <div class="reference-mic"><span></span><i></i><b></b></div>
+                        <div class="reference-float-card ai-card"><b>AI Generated</b><span class="mini-wave red-wave"></span></div>
+                        <div class="reference-scan-chip">◉ &nbsp; Analyzing...</div>
+                        <span class="reference-bubble bubble-one"></span><span class="reference-bubble bubble-two"></span><span class="reference-bubble bubble-three"></span>
                     </div>
                 </section>
-
-                <section class="compatibility-strip">
-                    <div class="section-intro">
-                        <h2>Engine Compatibility</h2>
-                        <p>Our neural engine supports lossless and compressed formats for exhaustive frequency analysis.</p>
-                    </div>
-                    <div class="format-grid">
-                        <div class="format-card"><strong>MP3</strong><span>MPEG Layer III</span></div>
-                        <div class="format-card"><strong>WAV</strong><span>Waveform Audio</span></div>
-                        <div class="format-card"><strong>FLAC</strong><span>Free Lossless</span></div>
-                    </div>
-                </section>
-
-                <section class="feature-grid">
-                    <article class="feature-card">
-                        <div class="feature-icon">◌</div>
-                        <h3>Forensic Anonymity</h3>
-                        <p>We prioritize institutional security. All analysis is performed within a sandboxed environment.</p>
-                        <ul>
-                            <li>AES-256 encryption at rest</li>
-                            <li>Zero-retention processing</li>
-                        </ul>
+                <section class="reference-workbench">
+                    <article class="reference-card upload-card">
+                        <div class="reference-card-title"><h2><span>↥</span>Upload Audio</h2><span class="format-chip">◉ &nbsp; Supported formats</span></div>
+                        <label class="reference-dropzone" id="dropzone" for="audio-input">
+                            <span class="reference-upload-cloud">↥</span>
+                            <strong>Drag and drop an audio file here</strong>
+                            <span>or click to browse</span>
+                            <span class="reference-upload-button">↥ &nbsp; Choose Audio File</span>
+                            <small>Supported: WAV, MP3, M4A, FLAC, OGG &nbsp; • &nbsp; Max file size: 10 MB</small>
+                        </label>
                     </article>
-                    <article class="feature-card">
-                        <div class="feature-icon">◎</div>
-                        <h3>Multi-Lingual Engine</h3>
-                        <p>Voice signatures transcend language. Our neural network analyzes phonetic artifacts across supported dialects.</p>
-                        <ul>
-                            <li>Phonetic artifact mapping</li>
-                            <li>Global dialect support</li>
-                        </ul>
-                    </article>
-                </section>
-
-                <section class="process-strip">
-                    <div class="eyebrow accent">Protocol</div>
-                    <h2>The Process</h2>
-                    <div class="process-grid">
-                        <article class="process-card process-card-a">
-                            <span>01</span>
-                            <h3>Upload Source</h3>
-                            <p>Import raw audio through our secure interface. We accept MP3, WAV, and FLAC evidence.</p>
+                    <div class="reference-results-column">
+                        <article class="reference-card preview-card">
+                            <div class="reference-card-title"><h2><span>♬</span>Audio Preview</h2><button class="format-chip" id="reference-clear">♜ &nbsp; Clear</button></div>
+                            <div class="reference-wave-preview" aria-hidden="true"><div class="reference-wave-bars"></div></div>
+                            <div class="reference-audio-controls"><button class="reference-play" type="button" data-route="${APP_ROUTES.workspace}">▶</button><span>0:00</span><div class="reference-track"><i></i></div><span>0:00</span></div>
+                            <p class="reference-file-status" id="reference-file-status">No audio selected yet — upload a file to begin.</p>
                         </article>
-                        <article class="process-card process-card-b">
-                            <span>02</span>
-                            <h3>Neural Analysis</h3>
-                            <p>Our engine scans for noise-floor drift, pitch-perfect harmonics, and synthetic reverberation patterns.</p>
-                        </article>
-                        <article class="process-card process-card-c">
-                            <span>03</span>
-                            <h3>Verdict Report</h3>
-                            <p>Receive a comprehensive forensic report detailing synthetic risk, signal artifacts, and evidence notes.</p>
+                        <article class="reference-card result-card">
+                            <div class="reference-card-title"><h2><span>♬</span>Analysis Result</h2><span class="result-spark">✦</span></div>
+                            <div class="reference-result-content"><div class="reference-confidence-ring"><span>—</span></div><div class="reference-result-copy"><strong id="reference-result-label">Ready to analyze</strong><span class="reference-result-badge">Awaiting audio</span><p id="reference-result-summary">Your classification and confidence will appear here after a real scan.</p></div><div class="reference-bot" aria-hidden="true"><span>••</span></div></div>
                         </article>
                     </div>
                 </section>
-
-                <section class="case-study">
-                    <div class="case-image">
-                        <div class="eye-plate"></div>
-                        <div class="quote-card">
-                            <small>Case ID: 77-X</small>
-                            <p>"The impersonation was perfect to the human ear, but VoxTrust saw the mathematical ghost in the waveform."</p>
-                        </div>
-                    </div>
-                    <div class="case-copy">
-                        <div class="eyebrow">Investigation</div>
-                        <h2>The Scandinavian CEO Heist</h2>
-                        <p>
-                            In March 2024, a major financial institution was targeted by a sophisticated voice-cloning attack.
-                            VoxTrust isolated synthetic markers in the intercepted call and flagged it before the transfer was authorized.
-                        </p>
-                        <div class="case-score">99.98% Synthetic</div>
-                        <button class="text-link" data-route="${APP_ROUTES.report}">Read The Full Investigation</button>
-                    </div>
-                </section>
-
-                <section class="cta-band">
-                    <h2>Secure Your Audio Integrity</h2>
-                    <p>Join 400+ forensic labs and financial institutions protecting the truth in the age of AI.</p>
-                    <div class="cta-actions">
-                        <button class="btn btn-ghost-light" data-route="${APP_ROUTES.status}">Create Account</button>
-                        <button class="btn btn-outline-light" data-route="${APP_ROUTES.workspace}">Talk To An Expert</button>
-                    </div>
+                <section class="reference-feature-row">
+                    <button class="reference-feature-card" data-route="${APP_ROUTES.report}"><span class="feature-3d">▥</span><strong>Detailed Analysis<small>Comprehensive audio feature<br>analysis and explanations</small></strong><i>↗</i></button>
+                    <button class="reference-feature-card" data-route="${APP_ROUTES.report}"><span class="feature-3d">▤</span><strong>Forensic Reports<small>Generate PDF reports for<br>detailed documentation</small></strong><i>↗</i></button>
+                    <button class="reference-feature-card" data-route="${APP_ROUTES.repository}"><span class="feature-3d">◷</span><strong>Scan History<small>Keep track of your<br>analysis results</small></strong><i>↗</i></button>
+                    <button class="reference-feature-card" data-route="${APP_ROUTES.diagnostics}"><span class="feature-3d">⚙</span><strong>System Diagnostics<small>Check model status<br>and system health</small></strong><i>↗</i></button>
                 </section>
             </main>
         </section>
