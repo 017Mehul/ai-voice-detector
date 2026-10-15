@@ -145,7 +145,9 @@ function bindBaseInteractions() {
 }
 
 function initializeScreen(screen) {
-    if (screen === "workspace") {
+    if (screen === "home") {
+        populateReferenceHome();
+    } else if (screen === "workspace") {
         initWorkspaceScreen();
     } else if (screen === "processing") {
         initProcessingScreen();
@@ -311,7 +313,16 @@ async function handleSelectedFile(file) {
     };
 
     appendWorkspaceLog(`Loaded exhibit ${file.name} successfully.`);
-    navigate(APP_ROUTES.workspace);
+    if (state.screen === "home") {
+        navigate(APP_ROUTES.home);
+        populateReferenceHome();
+        const status = document.getElementById("reference-file-status");
+        if (status) status.textContent = `Loaded: ${file.name} — ready to preview. Select Analyze to run detection.`;
+        const seek = document.getElementById("reference-seek");
+        if (seek) seek.disabled = false;
+    } else {
+        navigate(APP_ROUTES.workspace);
+    }
 }
 
 async function analyzeAudioFile(arrayBuffer, file, objectUrl) {
@@ -472,6 +483,23 @@ function buildFingerprint(seed) {
         const value = ((hash >> (index % 4) * 8) & 0xff) ^ (index * 17);
         return Math.abs(value).toString(16).padStart(2, "0").toUpperCase();
     }).join(":");
+}
+
+
+function populateReferenceHome() {
+    const evidence = state.currentEvidence;
+    const status = document.getElementById("reference-file-status");
+    const label = document.getElementById("reference-result-label");
+    const badge = document.querySelector(".reference-result-badge");
+    const summary = document.getElementById("reference-result-summary");
+    const ring = document.querySelector(".reference-confidence-ring span");
+    const seek = document.getElementById("reference-seek");
+    if (status) status.textContent = evidence ? `Loaded: ${evidence.fileName} — ready to preview.` : "No audio selected yet — upload a file to begin.";
+    if (seek) seek.disabled = !evidence;
+    if (label) label.textContent = state.lastResult ? (state.lastResult.classification === "AI_GENERATED" ? "Likely AI-generated" : state.lastResult.classification === "HUMAN" ? "Likely human" : "Inconclusive") : evidence ? "Ready to analyze" : "Ready to analyze";
+    if (badge) badge.textContent = state.lastResult ? "Scan complete" : evidence ? "Awaiting scan" : "Awaiting audio";
+    if (summary) summary.textContent = state.lastResult?.summary || (evidence ? "Audio loaded. Select Analyze to run the detector and view its result." : "Your classification and confidence will appear here after a real scan.");
+    if (ring) ring.textContent = state.lastResult ? `${Math.round((state.lastResult.confidence || state.lastResult.confidence_score || 0) * 100)}%` : "—";
 }
 
 function initWorkspaceScreen() {
