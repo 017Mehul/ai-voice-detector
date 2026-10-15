@@ -25,6 +25,7 @@ RATE_LIMITS = {
     "requests_per_hour": max(1, int(os.getenv("RATE_LIMIT_HOURLY", "1000"))),
     "requests_per_day": max(1, int(os.getenv("RATE_LIMIT_DAILY", "5000"))),
 }
+RATE_LIMIT_WINDOWS = {"minute": max(1, int(os.getenv("RATE_LIMIT_WINDOW", "60"))), "hour": 3600, "day": 86400}
 
 # In-memory storage for rate limiting (in production, use Redis or similar)
 class RateLimiter:
@@ -57,7 +58,7 @@ class RateLimiter:
         for client_id, client_requests in self._requests.items():
             # Clean all windows for this client
             for window in ['minute', 'hour', 'day']:
-                window_seconds = {'minute': 60, 'hour': 3600, 'day': 86400}[window]
+                window_seconds = RATE_LIMIT_WINDOWS[window]
                 window_cutoff = current_time - window_seconds
                 
                 # Remove old requests
@@ -99,7 +100,7 @@ class RateLimiter:
                 ('hour', RATE_LIMITS['requests_per_hour']),
                 ('day', RATE_LIMITS['requests_per_day'])
             ]:
-                window_seconds = {'minute': 60, 'hour': 3600, 'day': 86400}[window]
+                window_seconds = RATE_LIMIT_WINDOWS[window]
                 cutoff_time = current_time - window_seconds
                 
                 # Remove old requests
@@ -126,7 +127,7 @@ class RateLimiter:
             stats = {}
             
             for window in ['minute', 'hour', 'day']:
-                window_seconds = {'minute': 60, 'hour': 3600, 'day': 86400}[window]
+                window_seconds = RATE_LIMIT_WINDOWS[window]
                 cutoff_time = current_time - window_seconds
                 
                 # Count requests in current window
