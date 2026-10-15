@@ -6,6 +6,7 @@ and ensure fair usage of the API resources.
 """
 
 import time
+import os
 from typing import Dict, Optional
 from collections import defaultdict, deque
 from fastapi import Request, HTTPException
@@ -20,9 +21,9 @@ logger = get_logger(__name__)
 
 # Rate limiting configuration - more generous for testing and development
 RATE_LIMITS = {
-    'requests_per_minute': 120,  # Increased from 60 to handle test scenarios
-    'requests_per_hour': 2000,   # Increased from 1000
-    'requests_per_day': 20000    # Increased from 10000
+    "requests_per_minute": max(1, int(os.getenv("RATE_LIMIT_REQUESTS", "100"))),
+    "requests_per_hour": max(1, int(os.getenv("RATE_LIMIT_HOURLY", "1000"))),
+    "requests_per_day": max(1, int(os.getenv("RATE_LIMIT_DAILY", "5000"))),
 }
 
 # In-memory storage for rate limiting (in production, use Redis or similar)
@@ -180,22 +181,18 @@ async def check_rate_limit(request: Request) -> bool:
     Raises:
         HTTPException: If rate limit is exceeded
     """
-    # Check if rate limiting is disabled via environment variable (for testing)
-    import os
-    if os.getenv("RATE_LIMIT_ENABLED", "").lower() in ("false", "0", "no", "off"):
-        logger.debug("Rate limiting is disabled via environment variable")
-        return True
-    
-    # Check if rate limiting is enabled in configuration
     config = get_config()
-    if not config.rate_limit.enabled:
-        logger.debug("Rate limiting is disabled in configuration")
+    if os.getenv("RATE_LIMIT_ENABLED", "").lower() in ("false", "0", "no", "off") or not config.rate_limit.enabled:
+        logger.debug("Rate limiting is disabled by configuration")
         return True
     
     client_id = get_client_id(request)
     request_id = getattr(request.state, 'request_id', 'unknown')
     
     try:
+        RATE_LIMITS["requests_per_minute"] = config.rate_limit.requests
+        RATE_LIMITS["requests_per_hour"] = max(config.rate_limit.requests, int(os.getenv("RATE_LIMIT_HOURLY", "1000")))
+        RATE_LIMITS["requests_per_day"] = max(config.rate_limit.requests, int(os.getenv("RATE_LIMIT_DAILY", "5000")))
         is_allowed, error_message, retry_after = rate_limiter.is_allowed(client_id)
         
         if not is_allowed:
