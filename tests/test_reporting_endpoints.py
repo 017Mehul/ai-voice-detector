@@ -88,3 +88,16 @@ def test_detection_history_and_pdf_report_round_trip(tmp_path, monkeypatch):
         assert pdf_response.status_code == 200
         assert pdf_response.headers["content-type"] == "application/pdf"
         assert pdf_response.content.startswith(b"%PDF-")
+
+        # A separate browser session must not access another session's scans.
+        session_cookie = response.cookies.get("voxtrust_session")
+        assert session_cookie
+        assert "httponly" in response.headers.get("set-cookie", "").lower()
+        assert "samesite=lax" in response.headers.get("set-cookie", "").lower()
+
+        other_client = TestClient(create_app())
+        other_history = other_client.get("/api/v1/history")
+        assert other_history.status_code == 200
+        assert other_history.json()["count"] == 0
+        assert other_client.get(f"/api/v1/history/{scan_id}").status_code == 404
+        assert other_client.get(report_url).status_code == 404
