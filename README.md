@@ -181,6 +181,14 @@ Example response shape:
 
 This is an **illustrative response**, not a live prediction or a guarantee that every deployment returns exactly these fields. Check the API's actual response model and headers for the deployed version.
 
+## Privacy and persistence
+
+Scan history and PDF report endpoints are scoped to a random, HTTP-only `voxtrust_session` cookie. This prevents one ordinary browser session from listing another session's records, but it is **not account authentication**; users who clear cookies lose access to their session history. Do not use this mechanism as a high-assurance identity system.
+
+History is stored in a local JSON file by default. To persist it on a Render deployment, configure `VOICE_DETECTOR_HISTORY_PATH` to a path on an attached persistent disk. The current free Render service does not provide durable local-file persistence by default, so history may be lost after restarts or redeployments. Multi-instance deployments should use a shared database and distributed rate limiter.
+
+Rate limiting ignores client-supplied `X-Forwarded-For` headers to avoid trivial IP spoofing. The ASGI server's resolved peer address is used; if accurate per-client limits are needed behind a proxy, configure a trusted proxy chain at the server/deployment layer rather than trusting arbitrary headers.
+
 ## Model evaluation and limitations
 
 A model score should not be interpreted as a universally calibrated probability unless calibration has been validated on representative data. Performance may change across recording devices, languages, accents, codecs, background noise, and newer synthesis systems.
