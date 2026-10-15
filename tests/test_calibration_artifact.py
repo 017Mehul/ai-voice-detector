@@ -53,4 +53,3 @@ def test_nested_unfitted_calibrator_dict_artifact_is_treated_as_disabled(tmp_pat
     assert not calibrator.has_usable_calibrator()
     assert calibrator.calibrate_confidence(0.73) == 0.73
     assert calibrator.get_calibrator_info()["is_usable"] is False
-}
