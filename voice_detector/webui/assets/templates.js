@@ -139,7 +139,7 @@ function homeScreen() {
                         <article class="reference-card preview-card">
                             <div class="reference-card-title"><h2><span>♬</span>Audio Preview</h2><button class="format-chip" id="reference-clear">♜ &nbsp; Clear</button></div>
                             <div class="reference-wave-preview" aria-hidden="true"><div class="reference-wave-bars"></div></div>
-                            <div class="reference-audio-controls"><button class="reference-play" type="button" data-route="${APP_ROUTES.workspace}">▶</button><span>0:00</span><div class="reference-track"><i></i></div><span>0:00</span></div>
+                            <div class="reference-audio-controls"><button class="reference-play" id="reference-play" type="button" aria-label="Play audio">▶</button><span id="reference-current-time">00:00.00</span><input class="reference-seek" id="reference-seek" type="range" min="0" max="1000" value="0" aria-label="Seek audio" disabled><span id="reference-total-time">00:00.00</span></div>
                             <p class="reference-file-status" id="reference-file-status">No audio selected yet — upload a file to begin.</p>
                         </article>
                         <article class="reference-card result-card">
