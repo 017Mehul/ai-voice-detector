@@ -295,11 +295,9 @@ function processingScreen() {
                         <div class="status-pill">Status: Processing</div>
                     </div>
                     <nav class="stack-nav">
-                        <button class="stack-link active" data-report-tab="spectrogram">Spectrogram</button>
-                        <button class="stack-link" data-route="${APP_ROUTES.repository}">Biometrics</button>
-                        <button class="stack-link" data-report-tab="metadata">Metadata</button>
-                        <button class="stack-link" data-report-tab="transcription">Transcription</button>
-                        <button class="stack-link" data-route="${APP_ROUTES.report}">Report</button>
+                        <button class="stack-link active" data-route="${APP_ROUTES.report}">Model Result</button>
+                        <button class="stack-link" data-route="${APP_ROUTES.repository}">Scan History</button>
+                        <button class="stack-link" data-route="${APP_ROUTES.diagnostics}">Diagnostics</button>
                     </nav>
                     <button class="btn btn-solid btn-block" id="export-evidence-btn">Export Evidence</button>
                     <button class="text-link left" data-route="${APP_ROUTES.diagnostics}">System Logs</button>
@@ -378,7 +376,7 @@ function reportScreen() {
                     </div>
                     <nav class="report-nav">
                         <button data-route="${APP_ROUTES.workspace}">Dashboard</button>
-                        <button class="active" data-report-tab="forensic-log">Forensic Log</button>
+                        <button class="active" data-route="${APP_ROUTES.report}">Report Summary</button>
                         <button data-route="${APP_ROUTES.repository}">Voice Prints</button>
                         <button data-route="${APP_ROUTES.status}">Network Stats</button>
                         <button data-route="${APP_ROUTES.repository}">Archive</button>
