@@ -97,6 +97,17 @@ function bindBaseInteractions() {
         button.addEventListener("click", openUploader);
     });
 
+    const referenceClear = document.getElementById("reference-clear");
+    if (referenceClear) {
+        referenceClear.addEventListener("click", () => {
+            if (state.currentEvidence) {
+                clearEvidence();
+            } else {
+                showToast("Choose an audio file to begin a scan.");
+            }
+        });
+    }
+
     const fileInput = document.getElementById("audio-input");
     if (fileInput) {
         fileInput.addEventListener("change", async (event) => {
