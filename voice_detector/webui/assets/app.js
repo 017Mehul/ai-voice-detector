@@ -440,10 +440,10 @@ function buildArchiveEntry(overrides) {
         timestamp,
         format: overrides.format || (overrides.name || "UNKNOWN_AUDIO.WAV").split(".").pop()?.toUpperCase() || "WAV",
         waveformTint: overrides.waveformTint || "wave-cyan",
-        sampleRate: overrides.sampleRate || 48000,
-        duration: overrides.duration || 45,
-        channels: overrides.channels || "Mono",
-        bitrate: overrides.bitrate || "320 kbps",
+        sampleRate: overrides.sampleRate ?? null,
+        duration: overrides.duration ?? null,
+        channels: overrides.channels ?? null,
+        bitrate: overrides.bitrate ?? null,
         fingerprint: buildFingerprint((overrides.name || "UNKNOWN") + timestamp),
         summary: overrides.summary || null,
         reportUrl: overrides.reportUrl || (overrides.id ? `/api/v1/reports/${overrides.id}.pdf` : null),
@@ -926,8 +926,8 @@ function populateReport(result) {
 
     document.getElementById("report-scan-id").textContent = `SCAN_ID: ${result.id || result.fingerprint?.slice(0, 12) || "VX_0000"}`;
     document.getElementById("report-format").textContent = result.format || "WAV";
-    document.getElementById("report-bitrate").textContent = result.bitrate || result.bitrateLabel || "320 kbps";
-    document.getElementById("report-rate").textContent = result.sampleRateLabel || "48.0 kHz";
+    document.getElementById("report-bitrate").textContent = result.bitrate || result.bitrateLabel || "Unknown";
+    document.getElementById("report-rate").textContent = result.sampleRateLabel || "Unknown";
     document.getElementById("report-channels").textContent = result.channels || result.channelsLabel || "Mono";
     document.getElementById("report-fingerprint").textContent = result.fingerprint || buildFingerprint(result.name || "report");
 
@@ -960,35 +960,26 @@ function renderEmptyReportState() {
 }
 
 function buildVerdictSummary(classification, confidence) {
-    const pct = Math.round(confidence * 100);
-    if (classification === "AI_GENERATED") {
-        return `Our neural acoustic analysis detected significant synthetic pitch variations and unnatural phase alignment patterns. The confidence profile suggests a high probability of AI-generated speech at ${pct}%.`;
-    }
-    if (classification === "HUMAN") {
-        return `The evidence retains natural micro-variations, irregular breath cadence, and harmonic instability consistent with live human speech. The confidence profile supports a human-origin verdict at ${pct}%.`;
-    }
-    return `The evidence contains mixed indicators. Some forensic markers appear authentic while others remain unstable, leaving the verdict inconclusive at ${pct}% confidence.`;
+    const pct = Math.round(Number(confidence || 0) * 100);
+    const verdict = classification === "AI_GENERATED"
+        ? "likely AI-generated"
+        : classification === "HUMAN"
+            ? "likely human"
+            : "inconclusive";
+    return `The model classified this sample as ${verdict} with a reported confidence score of ${pct}%. This is a model estimate, not proof of origin. No specific acoustic artifact is asserted unless separately measured and shown.`;
 }
 
 function buildInsights(classification) {
-    if (classification === "AI_GENERATED") {
-        return [
-            { title: "Synthetic Jitter", description: "Micro-fluctuations in the fundamental frequency are quantized beyond a natural speech threshold." },
-            { title: "Harmonic Artifacts", description: "Upper harmonic bands show repeating structure common in diffusion-based voice synthesis." },
-        ];
-    }
-    if (classification === "HUMAN") {
-        return [
-            { title: "Breath Variability", description: "Breath pockets and phrase spacing drift in a human-like non-deterministic pattern." },
-            { title: "Organic Resonance", description: "Formant movement remains irregular and consistent with biological vocal tract motion." },
-        ];
-    }
+    const verdict = classification === "AI_GENERATED"
+        ? "Likely AI-generated"
+        : classification === "HUMAN"
+            ? "Likely human"
+            : "Inconclusive";
     return [
-        { title: "Mixed Markers", description: "The evidence shows both synthetic regularity and authentic noise-floor behavior." },
-        { title: "Context Required", description: "Additional audio length or higher quality evidence is recommended before a legal-grade verdict." },
+        { title: "Model output", description: `The classifier returned “${verdict}”. This is the model's prediction, not an independently verified forensic finding.` },
+        { title: "Interpretation", description: "Treat the result as an estimate. Recording quality, compression, language, and unseen voice-generation methods can affect reliability." },
     ];
 }
-
 function buildEvidenceId() {
     return `VT-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
 }
@@ -1235,7 +1226,7 @@ function buildReportText(report) {
         `Classification: ${toClassificationLabel(report.classification)}`,
         `Confidence: ${Math.round(confidence * 100)}%`,
         `Format: ${report.format || state.currentEvidence?.format || "WAV"}`,
-        `Sample Rate: ${report.sampleRateLabel || state.currentEvidence?.sampleRateLabel || "48.0 kHz"}`,
+        `Sample Rate: ${report.sampleRateLabel || state.currentEvidence?.sampleRateLabel || "Unknown"}`,
         `Channels: ${report.channels || report.channelsLabel || state.currentEvidence?.channelsLabel || "Mono"}`,
         `Fingerprint: ${report.fingerprint || buildFingerprint(report.name || "report")}`,
         "",
@@ -1371,9 +1362,9 @@ function buildReportFromArchive(entry) {
         name: entry.name,
         format: entry.format || entry.name.split(".").pop()?.toUpperCase() || "WAV",
         confidence: entry.confidence,
-        sampleRateLabel: entry.sampleRate ? `${(entry.sampleRate / 1000).toFixed(1)} kHz` : "-",
-        channels: entry.channels || "-",
-        bitrate: entry.bitrate || "-",
+        sampleRateLabel: entry.sampleRate ? `${(entry.sampleRate / 1000).toFixed(1)} kHz` : "Unknown",
+        channels: entry.channels || "Unknown",
+        bitrate: entry.bitrate || "Unknown",
         waveform: Array.isArray(entry.waveform) && entry.waveform.length > 0 ? entry.waveform : placeholderWaveform(88),
         summary: entry.summary || buildVerdictSummary(entry.classification, entry.confidence),
         insights: buildInsights(entry.classification),

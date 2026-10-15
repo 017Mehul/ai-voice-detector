@@ -6,6 +6,7 @@ and ensure fair usage of the API resources.
 """
 
 import time
+import os
 from typing import Dict, Optional
 from collections import defaultdict, deque
 from fastapi import Request, HTTPException
@@ -20,10 +21,11 @@ logger = get_logger(__name__)
 
 # Rate limiting configuration - more generous for testing and development
 RATE_LIMITS = {
-    'requests_per_minute': 120,  # Increased from 60 to handle test scenarios
-    'requests_per_hour': 2000,   # Increased from 1000
-    'requests_per_day': 20000    # Increased from 10000
+    "requests_per_minute": max(1, int(os.getenv("RATE_LIMIT_REQUESTS", "100"))),
+    "requests_per_hour": max(1, int(os.getenv("RATE_LIMIT_HOURLY", "1000"))),
+    "requests_per_day": max(1, int(os.getenv("RATE_LIMIT_DAILY", "5000"))),
 }
+RATE_LIMIT_WINDOWS = {"minute": max(1, int(os.getenv("RATE_LIMIT_WINDOW", "60"))), "hour": 3600, "day": 86400}
 
 # In-memory storage for rate limiting (in production, use Redis or similar)
 class RateLimiter:
@@ -56,7 +58,7 @@ class RateLimiter:
         for client_id, client_requests in self._requests.items():
             # Clean all windows for this client
             for window in ['minute', 'hour', 'day']:
-                window_seconds = {'minute': 60, 'hour': 3600, 'day': 86400}[window]
+                window_seconds = RATE_LIMIT_WINDOWS[window]
                 window_cutoff = current_time - window_seconds
                 
                 # Remove old requests
@@ -98,7 +100,7 @@ class RateLimiter:
                 ('hour', RATE_LIMITS['requests_per_hour']),
                 ('day', RATE_LIMITS['requests_per_day'])
             ]:
-                window_seconds = {'minute': 60, 'hour': 3600, 'day': 86400}[window]
+                window_seconds = RATE_LIMIT_WINDOWS[window]
                 cutoff_time = current_time - window_seconds
                 
                 # Remove old requests
@@ -125,7 +127,7 @@ class RateLimiter:
             stats = {}
             
             for window in ['minute', 'hour', 'day']:
-                window_seconds = {'minute': 60, 'hour': 3600, 'day': 86400}[window]
+                window_seconds = RATE_LIMIT_WINDOWS[window]
                 cutoff_time = current_time - window_seconds
                 
                 # Count requests in current window
@@ -142,30 +144,11 @@ rate_limiter = RateLimiter()
 
 
 def get_client_id(request: Request) -> str:
-    """
-    Extract client identifier from request.
-    
-    Args:
-        request: FastAPI request object
-        
-    Returns:
-        Client identifier string
-    """
-    # Try to get real IP from headers (for reverse proxy setups)
-    forwarded_for = request.headers.get('X-Forwarded-For')
-    if forwarded_for:
-        # Take the first IP in the chain
-        client_ip = forwarded_for.split(',')[0].strip()
-    else:
-        # Fall back to direct client IP
-        client_ip = request.client.host if request.client else 'unknown'
-    
-    # Sanitize IP address
-    if not client_ip or client_ip == 'unknown':
-        client_ip = 'unknown'
-    
-    return client_ip
-
+    """Return the ASGI server's resolved peer address, not a client-supplied header."""
+    # X-Forwarded-For is untrusted unless a known proxy strips/replaces it. Do not
+    # read it directly: callers could spoof addresses and evade rate limits.
+    client_ip = request.client.host if request.client else "unknown"
+    return client_ip if client_ip and client_ip != "unknown" else "unknown"
 
 async def check_rate_limit(request: Request) -> bool:
     """
@@ -180,22 +163,18 @@ async def check_rate_limit(request: Request) -> bool:
     Raises:
         HTTPException: If rate limit is exceeded
     """
-    # Check if rate limiting is disabled via environment variable (for testing)
-    import os
-    if os.getenv("RATE_LIMIT_ENABLED", "").lower() in ("false", "0", "no", "off"):
-        logger.debug("Rate limiting is disabled via environment variable")
-        return True
-    
-    # Check if rate limiting is enabled in configuration
     config = get_config()
-    if not config.rate_limit.enabled:
-        logger.debug("Rate limiting is disabled in configuration")
+    if os.getenv("RATE_LIMIT_ENABLED", "").lower() in ("false", "0", "no", "off") or not config.rate_limit.enabled:
+        logger.debug("Rate limiting is disabled by configuration")
         return True
     
     client_id = get_client_id(request)
     request_id = getattr(request.state, 'request_id', 'unknown')
     
     try:
+        RATE_LIMITS["requests_per_minute"] = config.rate_limit.requests
+        RATE_LIMITS["requests_per_hour"] = max(config.rate_limit.requests, int(os.getenv("RATE_LIMIT_HOURLY", "1000")))
+        RATE_LIMITS["requests_per_day"] = max(config.rate_limit.requests, int(os.getenv("RATE_LIMIT_DAILY", "5000")))
         is_allowed, error_message, retry_after = rate_limiter.is_allowed(client_id)
         
         if not is_allowed:

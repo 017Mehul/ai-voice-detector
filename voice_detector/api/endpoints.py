@@ -11,6 +11,8 @@ from pydantic import BaseModel, Field, field_validator
 from typing import Dict, Any, Optional
 import asyncio
 import time
+import re
+import secrets
 
 from ..utils.logging_config import get_logger
 from ..utils.reporting import (
@@ -99,6 +101,7 @@ def _build_scan_record(
     request_id: str,
     request_data: DetectionRequestModel,
     detection_response: DetectionResponse,
+    session_id: str,
 ) -> ScanRecord:
     """Create a persisted history record for a successful scan."""
     file_format = (request_data.file_format or request_data.filename or "WAV").split(".")[-1].upper()
@@ -124,6 +127,7 @@ def _build_scan_record(
             float(detection_response.confidence_score),
         ),
         waveform_bars=request_data.waveform_bars,
+        session_id=session_id,
     )
 
 
@@ -131,10 +135,11 @@ def _record_scan_history(
     request_id: str,
     request_data: DetectionRequestModel,
     detection_response: DetectionResponse,
+    session_id: str,
 ) -> ScanRecord:
-    """Persist a scan to the shared history store."""
+    """Persist a scan scoped to one browser session."""
     history_store = get_scan_history_store()
-    scan_record = _build_scan_record(request_id, request_data, detection_response)
+    scan_record = _build_scan_record(request_id, request_data, detection_response, session_id)
     return history_store.add_record(scan_record)
 
 
@@ -350,9 +355,13 @@ async def detect_voice(
             }
         )
         
-        scan_record = _record_scan_history(request_id, request_data, detection_response)
+        session_id = request.cookies.get("voxtrust_session", "")
+        if not re.fullmatch(r"[A-Za-z0-9_-]{40,80}", session_id):
+            session_id = secrets.token_urlsafe(32)
 
-        return create_detection_response(
+        scan_record = _record_scan_history(request_id, request_data, detection_response, session_id)
+
+        response = create_detection_response(
             classification=detection_response.classification,
             confidence_score=detection_response.confidence_score,
             processing_time=processing_time,
@@ -362,6 +371,9 @@ async def detect_voice(
                 "X-Report-URL": f"/api/v1/reports/{scan_record.scan_id}.pdf",
             },
         )
+        response.set_cookie(key="voxtrust_session", value=session_id, httponly=True, secure=request.url.scheme == "https", samesite="lax", max_age=60 * 60 * 24 * 30, path="/")
+        response.headers["Cache-Control"] = "no-store"
+        return response
         
     except HTTPException:
         # Re-raise HTTP exceptions as-is
@@ -456,11 +468,12 @@ async def _validate_and_sanitize_input(
 
 
 @router.get("/history")
-async def get_scan_history(limit: int = 50):
-    """Return recent completed scan history entries."""
+async def get_scan_history(request: Request, limit: int = 50):
+    """Return only scans belonging to this browser session."""
     history_store = get_scan_history_store()
+    session_id = request.cookies.get("voxtrust_session")
     safe_limit = max(1, min(limit, 250))
-    records = [record.to_dict() for record in history_store.list_records(limit=safe_limit)]
+    records = [record.to_dict() for record in history_store.list_records(limit=safe_limit, session_id=session_id)]
     return {
         "items": records,
         "count": len(records),
@@ -468,10 +481,10 @@ async def get_scan_history(limit: int = 50):
 
 
 @router.get("/history/{scan_id}")
-async def get_scan_history_item(scan_id: str):
-    """Return a specific persisted scan entry."""
+async def get_scan_history_item(scan_id: str, request: Request):
+    """Return a scan only to the browser session that created it."""
     history_store = get_scan_history_store()
-    record = history_store.get_record(scan_id)
+    record = history_store.get_record(scan_id, session_id=request.cookies.get("voxtrust_session"))
     if record is None:
         raise HTTPException(status_code=404, detail="Scan report not found")
 
@@ -479,10 +492,10 @@ async def get_scan_history_item(scan_id: str):
 
 
 @router.get("/reports/{scan_id}.pdf")
-async def download_scan_report(scan_id: str):
-    """Return a generated PDF report for a persisted scan."""
+async def download_scan_report(scan_id: str, request: Request):
+    """Return a PDF only to the browser session that created the scan."""
     history_store = get_scan_history_store()
-    record = history_store.get_record(scan_id)
+    record = history_store.get_record(scan_id, session_id=request.cookies.get("voxtrust_session"))
     if record is None:
         raise HTTPException(status_code=404, detail="Scan report not found")
 

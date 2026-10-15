@@ -31,6 +31,7 @@ class ScanRecord:
     fingerprint: Optional[str] = None
     summary: Optional[str] = None
     waveform_bars: Optional[List[float]] = None
+    session_id: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to a frontend-friendly dictionary."""
@@ -143,16 +144,21 @@ class ScanHistoryStore:
             self._save_unlocked(records[: self.max_entries])
         return record
 
-    def list_records(self, limit: int = 50) -> List[ScanRecord]:
-        """Return recent scan records, newest first."""
+    def list_records(self, limit: int = 50, session_id: Optional[str] = None) -> List[ScanRecord]:
+        """Return only records owned by the supplied browser session."""
+        if not session_id:
+            return []
         with self._lock:
-            return self._load_unlocked()[:limit]
+            owned = [record for record in self._load_unlocked() if record.session_id == session_id]
+            return owned[:limit]
 
-    def get_record(self, scan_id: str) -> Optional[ScanRecord]:
-        """Return a specific scan record if present."""
+    def get_record(self, scan_id: str, session_id: Optional[str] = None) -> Optional[ScanRecord]:
+        """Return a record only when it belongs to the supplied browser session."""
+        if not session_id:
+            return None
         with self._lock:
             for record in self._load_unlocked():
-                if record.scan_id == scan_id:
+                if record.scan_id == scan_id and record.session_id == session_id:
                     return record
         return None
 
