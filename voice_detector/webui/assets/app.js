@@ -293,24 +293,37 @@ async function handleSelectedFile(file) {
         URL.revokeObjectURL(state.currentEvidence.objectUrl);
     }
 
-    const arrayBuffer = await file.arrayBuffer();
-    const objectUrl = URL.createObjectURL(file);
-    const base64 = arrayBufferToBase64(arrayBuffer);
-    const analysis = await analyzeAudioFile(arrayBuffer, file, objectUrl);
+    let objectUrl = null;
+    try {
+        const arrayBuffer = await file.arrayBuffer();
+        objectUrl = URL.createObjectURL(file);
+        const base64 = arrayBufferToBase64(arrayBuffer);
+        const analysis = await analyzeAudioFile(arrayBuffer, file, objectUrl);
 
-    state.currentEvidence = {
-        ...analysis,
-        exhibitId: buildEvidenceId(),
-        fileName: file.name,
-        format: extension,
-        sizeBytes: file.size,
-        sizeLabel: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
-        objectUrl,
-        base64,
-        file,
-        volume: 0.8,
-        logEntries: buildWorkspaceLog(file.name),
-    };
+        state.currentEvidence = {
+            ...analysis,
+            exhibitId: buildEvidenceId(),
+            fileName: file.name,
+            format: extension,
+            sizeBytes: file.size,
+            sizeLabel: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+            objectUrl,
+            base64,
+            file,
+            volume: 0.8,
+            logEntries: buildWorkspaceLog(file.name),
+        };
+    } catch (error) {
+        if (objectUrl) URL.revokeObjectURL(objectUrl);
+        console.error("Unable to load selected audio file:", error);
+        setLastError({
+            error: "AUDIO_LOAD_FAILED",
+            message: "The selected audio file could not be loaded. Please try another WAV, MP3, or FLAC file.",
+            details: { activeCard: "format" },
+        });
+        navigate(APP_ROUTES.diagnostics);
+        return;
+    }
 
     appendWorkspaceLog(`Loaded exhibit ${file.name} successfully.`);
     if (state.screen === "home") {
@@ -331,13 +344,11 @@ async function analyzeAudioFile(arrayBuffer, file, objectUrl) {
     let waveform = placeholderWaveform(88);
 
     if (audio) {
+        // Start loading the preview without waiting for loadedmetadata here.
+        // The media event can fire before a listener is attached, which used to
+        // leave file selection stuck before the UI could show the chosen file.
         audio.src = objectUrl;
         audio.load();
-        try {
-            await once(audio, "loadedmetadata");
-        } catch {
-            // Keep fallback metadata.
-        }
     }
 
     try {
