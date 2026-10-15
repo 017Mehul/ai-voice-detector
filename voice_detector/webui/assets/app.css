@@ -2054,3 +2054,12 @@ p {
     .screen-processing .exec-step { align-items:flex-start; flex-direction:column; }
     .screen-processing .exec-step em { text-align:left; }
 }
+
+
+/* Functional home audio player controls */
+.reference-audio-controls { display:grid; grid-template-columns:48px auto minmax(70px,1fr) auto; align-items:center; gap:12px; min-width:0; }
+.reference-audio-controls .reference-play { flex:0 0 auto; cursor:pointer; }
+.reference-audio-controls .reference-seek { width:100%; min-width:0; accent-color:#1673f9; cursor:pointer; }
+.reference-audio-controls .reference-seek:disabled { opacity:.45; cursor:not-allowed; }
+.reference-audio-controls span { font-size:12px; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.reference-file-status { overflow-wrap:anywhere; }
