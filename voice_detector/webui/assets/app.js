@@ -97,6 +97,21 @@ function bindBaseInteractions() {
         button.addEventListener("click", openUploader);
     });
 
+    const referencePlay = document.getElementById("reference-play");
+    if (referencePlay) {
+        referencePlay.addEventListener("click", togglePlayback);
+    }
+    const referenceSeek = document.getElementById("reference-seek");
+    if (referenceSeek) {
+        referenceSeek.addEventListener("input", (event) => {
+            const audio = getAudio();
+            if (audio && Number.isFinite(audio.duration)) {
+                audio.currentTime = (Number(event.target.value) / 1000) * audio.duration;
+                syncAudioTimes();
+            }
+        });
+    }
+
     const referenceClear = document.getElementById("reference-clear");
     if (referenceClear) {
         referenceClear.addEventListener("click", () => {
@@ -674,7 +689,7 @@ function syncPlayButtons() {
     const audio = getAudio();
     const stateLabel = audio && !audio.paused ? "pause" : "play";
     const icon = stateLabel === "pause" ? "❚❚" : "▶";
-    [document.getElementById("play-toggle"), document.getElementById("report-play-toggle")]
+    [document.getElementById("play-toggle"), document.getElementById("report-play-toggle"), document.getElementById("reference-play")]
         .filter(Boolean)
         .forEach((button) => {
             button.replaceChildren(document.createTextNode(icon));
@@ -693,6 +708,10 @@ function syncAudioTimes() {
     const total = formatDuration(audio.duration || state.currentEvidence?.duration || 0);
     document.getElementById("current-time") && (document.getElementById("current-time").textContent = current);
     document.getElementById("total-time") && (document.getElementById("total-time").textContent = total);
+    document.getElementById("reference-current-time") && (document.getElementById("reference-current-time").textContent = current);
+    document.getElementById("reference-total-time") && (document.getElementById("reference-total-time").textContent = total);
+    const referenceSeek = document.getElementById("reference-seek");
+    if (referenceSeek && audio.duration > 0) referenceSeek.value = String(Math.round((audio.currentTime / audio.duration) * 1000));
     document.getElementById("report-current-time") && (document.getElementById("report-current-time").textContent = current);
     document.getElementById("report-total-time") && (document.getElementById("report-total-time").textContent = total);
     syncPlayButtons();
