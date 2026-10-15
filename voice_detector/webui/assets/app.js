@@ -536,7 +536,7 @@ function initProcessingScreen() {
         caseTitle.textContent = evidence ? evidence.fileName : "UNKNOWN_CAPTURE";
     }
     document.getElementById("processing-subject").textContent = evidence ? `'${evidence.fileName}'` : "'Unknown_Capture_021.wav'";
-    document.getElementById("processing-rate").textContent = evidence ? `${evidence.sampleRateLabel} / 24-bit` : "48.0 kHz / 24-bit";
+    document.getElementById("processing-rate").textContent = evidence ? evidence.sampleRateLabel : "—";
     document.getElementById("processing-warning").textContent = evidence
         ? `Analysis integrity depends on signal-to-noise ratio. Ambient noise floor is currently estimated at ${evidence.noiseDbLabel}.`
         : "Analysis integrity depends on signal-to-noise ratio. Ambient noise floor detected in the evidence capture.";
@@ -723,19 +723,13 @@ async function runDetectionFlow() {
 
     const stageSequence = ["features", "classify", "calibrate", "finalize"];
     let stageIndex = 0;
-    let confidenceValue = 62;
     const startedAt = performance.now();
 
-    updateProcessingStage("decode", "Complete (0.3s)", "complete");
-    updateProcessingStage("features", "Processing...", "active");
+    const confidenceNode = document.getElementById("processing-confidence");
+    if (confidenceNode) confidenceNode.textContent = "Waiting for model…";
 
-    state.processing.confidenceTimer = window.setInterval(() => {
-        confidenceValue = Math.min(98.5, confidenceValue + Math.random() * 2.4);
-        const node = document.getElementById("processing-confidence");
-        if (node) {
-            node.textContent = `${confidenceValue.toFixed(1)}%`;
-        }
-    }, 240);
+    updateProcessingStage("decode", "Complete", "complete");
+    updateProcessingStage("features", "Processing…", "active");
 
     state.processing.stageTimer = window.setInterval(() => {
         const currentStage = stageSequence[stageIndex];
