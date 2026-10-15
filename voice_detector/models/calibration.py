@@ -523,6 +523,25 @@ class ConfidenceCalibrator:
             self.is_fitted = False
 
             saved_data = joblib.load(calibrator_path)
+
+            # Some deployments intentionally ship an unfitted ConfidenceCalibrator
+            # as a placeholder because the old calibrator was trained against a
+            # previous classifier. Treat that artifact as "calibration disabled"
+            # rather than a corrupt artifact: inference already returns the
+            # classifier's raw confidence when no usable calibrator is available.
+            if (
+                isinstance(saved_data, ConfidenceCalibrator)
+                and not saved_data.has_usable_calibrator()
+            ):
+                self.method = saved_data.method if saved_data.method in ("platt", "isotonic") else self.method
+                if isinstance(saved_data.feature_quality_weights, dict):
+                    self.feature_quality_weights = saved_data.feature_quality_weights.copy()
+                logger.info(
+                    "Calibration artifact is an unfitted placeholder; "
+                    "raw model confidence will be returned"
+                )
+                return
+
             self._restore_from_artifact(saved_data)
 
             if not self.has_usable_calibrator():
