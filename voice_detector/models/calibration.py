@@ -535,6 +535,13 @@ class ConfidenceCalibrator:
                 and not artifact_wrapper.has_usable_calibrator()
             ):
                 metadata = saved_data if isinstance(saved_data, dict) else {}
+                # A disabled placeholder is valid only when the artifact
+                # explicitly says calibration is disabled. Reject contradictory
+                # metadata rather than silently accepting a broken artifact.
+                if metadata.get("is_calibrated") is True or metadata.get("is_fitted") is True:
+                    raise ValueError(
+                        "Calibration artifact claims to be fitted but contains an unfitted calibrator"
+                    )
                 saved_method = metadata.get("method", getattr(artifact_wrapper, "method", None))
                 if saved_method in ("platt", "isotonic"):
                     self.method = saved_method
