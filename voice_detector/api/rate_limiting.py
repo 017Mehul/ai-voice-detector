@@ -143,30 +143,11 @@ rate_limiter = RateLimiter()
 
 
 def get_client_id(request: Request) -> str:
-    """
-    Extract client identifier from request.
-    
-    Args:
-        request: FastAPI request object
-        
-    Returns:
-        Client identifier string
-    """
-    # Try to get real IP from headers (for reverse proxy setups)
-    forwarded_for = request.headers.get('X-Forwarded-For')
-    if forwarded_for:
-        # Take the first IP in the chain
-        client_ip = forwarded_for.split(',')[0].strip()
-    else:
-        # Fall back to direct client IP
-        client_ip = request.client.host if request.client else 'unknown'
-    
-    # Sanitize IP address
-    if not client_ip or client_ip == 'unknown':
-        client_ip = 'unknown'
-    
-    return client_ip
-
+    """Return the ASGI server's resolved peer address, not a client-supplied header."""
+    # X-Forwarded-For is untrusted unless a known proxy strips/replaces it. Do not
+    # read it directly: callers could spoof addresses and evade rate limits.
+    client_ip = request.client.host if request.client else "unknown"
+    return client_ip if client_ip and client_ip != "unknown" else "unknown"
 
 async def check_rate_limit(request: Request) -> bool:
     """
