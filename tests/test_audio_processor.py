@@ -324,7 +324,9 @@ class TestAudioProcessor:
     def test_detect_corrupted_audio_low_dynamic_range(self):
         """Test corruption detection for very low dynamic range"""
         # Create audio with very small variations
-        samples = np.full(44100, 0.5) + np.random.randn(44100) * 0.001
+        # Deterministic low-amplitude signal: range is exactly ~0.002, below the 0.01 threshold.
+        # Random noise made this test flaky because its peak-to-peak range varies by seed.
+        samples = np.full(44100, 0.5) + 0.001 * np.sin(np.linspace(0, 200 * np.pi, 44100))
         audio_data = AudioData(
             samples=samples,
             sample_rate=22050,
